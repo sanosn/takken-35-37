@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>35条か37条か</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="35か37か">
+<meta name="theme-color" content="#2563eb">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<style>
+  :root {
+    --bg: #f6f7fb; --card: #ffffff; --text: #1f2430; --sub: #6b7280; --line: #e5e7eb;
+    --c35: #2563eb; --c35bg: #e8efff; --c37: #ea580c; --c37bg: #fff0e6;
+    --both: #7c3aed; --bothbg: #f1eaff;
+    --ok: #16a34a; --okbg: #e7f8ee; --ng: #dc2626; --ngbg: #fdecec;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12141a; --card: #1c1f27; --text: #e8eaf0; --sub: #9aa1ad; --line: #2c3040;
+      --c35: #6b9bff; --c35bg: #1d2a4a; --c37: #ff9a5c; --c37bg: #3a2416;
+      --both: #b18cff; --bothbg: #2c2145;
+      --ok: #4ade80; --okbg: #163323; --ng: #f87171; --ngbg: #3a1a1a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+    line-height: 1.6;
+  }
+  .wrap {
+    max-width: 640px; margin: 0 auto;
+    padding: calc(20px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right))
+             calc(40px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+  }
+  /* スマホで連打してもズームしない・タップ時の青い枠を出さない */
+  button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  h1 { font-size: 1.5rem; margin: 8px 0 4px; }
+  .lead { color: var(--sub); margin: 0 0 20px; font-size: .95rem; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-bottom: 14px; }
+  .hidden { display: none !important; }
+  button { font: inherit; cursor: pointer; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--text); padding: 12px 14px; }
+  button:disabled { cursor: default; }
+  .menu { display: grid; gap: 10px; }
+  .menu button { text-align: left; font-weight: 600; }
+  .menu button small { display: block; font-weight: 400; color: var(--sub); }
+  label.opt { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; font-size: .95rem; }
+  label.opt input { margin-top: 5px; width: 18px; height: 18px; }
+  label.opt small { color: var(--sub); display: block; }
+
+  .bar { display: flex; justify-content: space-between; align-items: center; color: var(--sub); font-size: .9rem; margin-bottom: 8px; }
+  .progress { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-bottom: 14px; }
+  .progress > div { height: 100%; background: var(--c35); width: 0; transition: width .2s; }
+  .tag { display: inline-block; font-size: .78rem; padding: 2px 8px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); color: var(--sub); margin-bottom: 8px; }
+  .q { font-size: 1.2rem; font-weight: 700; min-height: 4.5em; }
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
+  .choices.three { grid-template-columns: 1fr 1fr 1fr; }
+  .choice { padding: 18px 8px; font-size: 1.05rem; font-weight: 700; border-width: 2px; }
+  .choice small { display: block; font-weight: 400; font-size: .78rem; }
+  .choice.c35 { color: var(--c35); border-color: var(--c35); background: var(--c35bg); }
+  .choice.c37 { color: var(--c37); border-color: var(--c37); background: var(--c37bg); }
+  .choice.both { color: var(--both); border-color: var(--both); background: var(--bothbg); }
+  .choice.dim { opacity: .35; }
+
+  .result { margin-top: 14px; padding: 14px; border-radius: 12px; }
+  .result.ok { background: var(--okbg); }
+  .result.ng { background: var(--ngbg); }
+  .result .head { font-weight: 800; font-size: 1.1rem; }
+  .result.ok .head { color: var(--ok); }
+  .result.ng .head { color: var(--ng); }
+  .result p { margin: 6px 0 0; }
+  .next { width: 100%; margin-top: 12px; background: var(--text); color: var(--bg); border: none; font-weight: 700; }
+
+  .score { font-size: 2.6rem; font-weight: 800; text-align: center; margin: 4px 0; }
+  .center { text-align: center; color: var(--sub); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .row button { flex: 1; min-width: 140px; font-weight: 600; }
+  ul.list { list-style: none; padding: 0; margin: 0; }
+  ul.list li { padding: 10px 0; border-bottom: 1px solid var(--line); }
+  ul.list li:last-child { border-bottom: none; }
+  ul.list .note { color: var(--sub); font-size: .88rem; }
+  .badge { display: inline-block; font-size: .75rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; margin-right: 6px; }
+  .badge.a35 { background: var(--c35bg); color: var(--c35); }
+  .badge.a37 { background: var(--c37bg); color: var(--c37); }
+  .badge.aboth { background: var(--bothbg); color: var(--both); }
+  h2 { font-size: 1.1rem; margin: 0 0 8px; }
+  .tips { font-size: .92rem; margin: 0; padding-left: 1.2em; }
+  .back { background: none; border: none; color: var(--sub); padding: 6px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- スタート画面 -->
+  <section id="start">
+    <h1>35条か37条か</h1>
+    <p class="lead">宅建業法：その記載事項は「35条書面（重要事項説明書）」と「37条書面（契約書面）」のどちら？</p>
+    <div class="card">
+      <div class="menu">
+        <button data-mode="10">10問チャレンジ<small>ランダムに10問出題</small></button>
+        <button data-mode="all">全問チャレンジ<small id="allCount"></small></button>
+        <button data-mode="weak" id="weakBtn">苦手な問題だけ<small id="weakCount"></small></button>
+        <button id="listBtn">記載事項の一覧を見る<small>答えと解説をまとめて確認</small></button>
+      </div>
+      <label class="opt">
+        <input type="checkbox" id="includeBoth">
+        <span>「両方に記載」の項目も出題する（3択）<small>契約の解除・損害賠償額の予定など、ひっかけ頻出の項目</small></span>
+      </label>
+    </div>
+  </section>
+
+  <!-- 問題画面 -->
+  <section id="quiz" class="hidden">
+    <div class="bar"><button class="back" id="quitBtn">← やめる</button><span id="counter"></span></div>
+    <div class="progress"><div id="prog"></div></div>
+    <div class="card">
+      <span class="tag" id="qtag"></span>
+      <div class="q" id="qtext"></div>
+      <div class="choices" id="choices"></div>
+      <div id="result" class="result hidden"></div>
+      <button class="next hidden" id="nextBtn">次へ</button>
+    </div>
+  </section>
+
+  <!-- 結果画面 -->
+  <section id="end" class="hidden">
+    <div class="card">
+      <div class="center">結果</div>
+      <div class="score" id="score"></div>
+      <div class="center" id="scoreSub"></div>
+    </div>
+    <div class="card" id="missCard">
+      <h2>まちがえた問題</h2>
+      <ul class="list" id="missList"></ul>
+    </div>
+    <div class="row">
+      <button id="retryMissBtn">まちがえた問題をもう一度</button>
+      <button id="homeBtn">スタートに戻る</button>
+    </div>
+  </section>
+
+  <!-- 一覧画面 -->
+  <section id="list" class="hidden">
+    <button class="back" id="listBack">← 戻る</button>
+    <div class="card">
+      <h2>覚え方のコツ</h2>
+      <ul class="tips">
+        <li><b>35条</b>＝契約する<b>前</b>に「物件の状態・法令制限・お金の保全」を説明する書面（宅建士が記名して説明）</li>
+        <li><b>37条</b>＝契約した<b>後</b>に「誰が・何を・いくらで・いつ」を確認する書面（宅建士の記名は必要、説明は不要）</li>
+        <li>代金・借賃の<b>額そのもの</b>、<b>引渡し時期</b>、<b>移転登記の申請時期</b>は37条だけ</li>
+        <li>貸借の<b>契約期間・更新</b>は35条だけ（37条には無い）</li>
+        <li>「解除」「損害賠償額の予定・違約金」「代金以外の金銭」は<b>両方</b></li>
+      </ul>
+    </div>
+    <div class="card"><h2><span class="badge a35">35条のみ</span></h2><ul class="list" id="list35"></ul></div>
+    <div class="card"><h2><span class="badge a37">37条のみ</span></h2><ul class="list" id="list37"></ul></div>
+    <div class="card"><h2><span class="badge aboth">両方</span></h2><ul class="list" id="listBoth"></ul></div>
+  </section>
+
+</div>
+
+<script>
+// 問題データ。a: "35" | "37" | "both"、tag: 対象となる取引、note: 解説
+const ITEMS = [
+  // ---- 35条のみ ----
+  { q: "登記された権利の種類・内容、登記名義人（または表題部の所有者）", a: "35", tag: "すべての取引", note: "37条には「移転登記の申請の時期」は載るが、登記された権利の内容は載らない。" },
+  { q: "都市計画法・建築基準法などの法令に基づく制限の概要", a: "35", tag: "すべての取引", note: "建物の貸借では、建築基準法の容積率・建蔽率などは説明不要。" },
+  { q: "私道に関する負担", a: "35", tag: "建物の貸借以外", note: "建物の貸借では説明不要。負担がない場合も「なし」と説明する。" },
+  { q: "飲用水・電気・ガスの供給施設、排水施設の整備状況", a: "35", tag: "すべての取引", note: "未整備の場合は、整備の見通しと負担金も説明する。" },
+  { q: "未完成物件の場合、工事完了時の形状・構造", a: "35", tag: "未完成物件", note: "必要に応じて図面を交付して説明する。" },
+  { q: "既存建物の建物状況調査（インスペクション）の実施の有無と、実施した場合の結果の概要", a: "35", tag: "既存建物", note: "37条に載るのは「構造耐力上主要な部分等の状況について当事者の双方が確認した事項」。ひっかけ注意。" },
+  { q: "既存建物の設計図書・点検記録など、建築・維持保全の状況に関する書類の保存状況", a: "35", tag: "既存建物の売買・交換", note: "貸借では説明不要。" },
+  { q: "造成宅地防災区域内にあるときは、その旨", a: "35", tag: "すべての取引", note: "災害関係の区域・マップは35条の項目。" },
+  { q: "土砂災害警戒区域内にあるときは、その旨", a: "35", tag: "すべての取引", note: "災害関係の区域・マップは35条の項目。" },
+  { q: "津波災害警戒区域内にあるときは、その旨", a: "35", tag: "すべての取引", note: "災害関係の区域・マップは35条の項目。" },
+  { q: "水防法に基づく水害ハザードマップにおける物件の所在地", a: "35", tag: "すべての取引", note: "ハザードマップを提示して所在地を説明する。" },
+  { q: "石綿（アスベスト）使用の有無の調査結果が記録されているときは、その内容", a: "35", tag: "建物", note: "記録があれば説明する。業者に調査を実施する義務まではない。" },
+  { q: "建物の耐震診断を受けているときは、その内容", a: "35", tag: "建物（昭和56年6月1日以降着工は不要）", note: "新耐震基準の建物は説明不要。耐震診断の実施義務はない。" },
+  { q: "住宅性能評価を受けた新築住宅であるときは、その旨", a: "35", tag: "新築住宅の売買・交換", note: "貸借では説明不要。" },
+  { q: "手付金等を受領する場合の保全措置の概要", a: "35", tag: "売買・交換", note: "37条には載らない。37条の「代金以外の金銭」と混同しないこと。" },
+  { q: "支払金・預り金を受領する場合の保全措置を講ずるかどうか、その概要", a: "35", tag: "すべての取引", note: "37条には載らない。" },
+  { q: "代金・交換差金に関する金銭の貸借（ローン）のあっせんの「内容」", a: "35", tag: "売買・交換", note: "あっせんの内容は35条のみ。「あっせんが不成立のときの措置」は両方に載る。" },
+  { q: "（区分所有建物）敷地に関する権利の種類・内容", a: "35", tag: "区分所有建物の売買・交換", note: "マンション特有の項目は35条。" },
+  { q: "（区分所有建物）共用部分に関する規約の定め（案を含む）", a: "35", tag: "区分所有建物の売買・交換", note: "マンション特有の項目は35条。" },
+  { q: "（区分所有建物）専有部分の用途その他の利用制限に関する規約の定め（ペット禁止など）", a: "35", tag: "区分所有建物（貸借でも必要）", note: "借りる人にも関係するので、貸借でも説明が必要。" },
+  { q: "（区分所有建物）専用使用権に関する規約の定め（バルコニー・駐車場など）", a: "35", tag: "区分所有建物の売買・交換", note: "使用者の氏名や使用料までは説明不要。" },
+  { q: "（区分所有建物）計画的修繕積立金の規約の定めと、既に積み立てられている額", a: "35", tag: "区分所有建物の売買・交換", note: "滞納があればその額も説明する。" },
+  { q: "（区分所有建物）通常の管理費用の額", a: "35", tag: "区分所有建物の売買・交換", note: "滞納があればその額も説明する。" },
+  { q: "管理の委託を受けている者の氏名（商号）・住所", a: "35", tag: "区分所有建物・建物の貸借など", note: "委託先の氏名と住所を説明する（委託契約の内容までは不要）。" },
+  { q: "（区分所有建物）建物の維持修繕の実施状況の記録", a: "35", tag: "区分所有建物の売買・交換", note: "記録があればその内容を説明する。" },
+  { q: "（貸借）契約期間および契約の更新に関する事項", a: "35", tag: "貸借", note: "超頻出ひっかけ。37条（貸借）の記載事項に契約期間は無い。" },
+  { q: "（貸借）定期借地権・定期建物賃貸借・終身建物賃貸借であるときは、その旨", a: "35", tag: "貸借", note: "契約前に知らせるべき重要な性質なので35条。" },
+  { q: "（貸借）敷金など、契約終了時に精算することとされている金銭の精算に関する事項", a: "35", tag: "貸借", note: "37条の「代金・借賃以外の金銭（額・時期・目的）」とは別物。" },
+  { q: "（建物の貸借）台所・浴室・便所その他の設備の整備の状況", a: "35", tag: "建物の貸借", note: "建物の貸借のみの項目。" },
+  { q: "（宅地の貸借）契約終了時における建物の取壊しに関する事項", a: "35", tag: "宅地の貸借", note: "宅地の貸借のみの項目。" },
+  { q: "（宅地・建物の貸借）用途その他の利用の制限に関する事項", a: "35", tag: "貸借", note: "事業用不可・ペット不可など。" },
+
+  // ---- 37条のみ ----
+  { q: "当事者の氏名（法人の場合は名称）・住所", a: "37", tag: "すべての取引（必ず記載）", note: "契約内容を確認する書面なので「誰と誰の契約か」は37条。" },
+  { q: "宅地・建物を特定するために必要な表示（所在・地番など）", a: "37", tag: "すべての取引（必ず記載）", note: "35条にも物件の説明はあるが、記載事項としての「物件の表示」は37条。" },
+  { q: "代金・交換差金・借賃の額、その支払時期・支払方法", a: "37", tag: "すべての取引（必ず記載）", note: "超頻出。代金の額そのものは35条には載らない。" },
+  { q: "宅地・建物の引渡しの時期", a: "37", tag: "すべての取引（必ず記載）", note: "35条には載らない。" },
+  { q: "移転登記の申請の時期", a: "37", tag: "売買・交換（必ず記載）", note: "貸借では不要。35条の「登記された権利」とセットで出るひっかけ。" },
+  { q: "既存建物の構造耐力上主要な部分等の状況について、当事者の双方が確認した事項", a: "37", tag: "既存建物の売買・交換（必ず記載）", note: "35条は「建物状況調査の有無・結果の概要」。言い回しで見分ける。" },
+  { q: "天災その他不可抗力による損害の負担（危険負担）に関する定め", a: "37", tag: "定めがあるとき", note: "35条には載らない。" },
+  { q: "租税その他の公課の負担に関する定め", a: "37", tag: "売買・交換（定めがあるとき）", note: "固定資産税の精算など。35条には載らない。" },
+  { q: "契約不適合責任（担保責任）の内容についての定め", a: "37", tag: "売買・交換（定めがあるとき）", note: "責任の「内容」は37条。履行を確保する保証保険等の「措置」は両方。" },
+
+  // ---- 両方 ----
+  { q: "代金・交換差金・借賃以外に授受される金銭（手付金・敷金など）の額・目的", a: "both", tag: "両方", note: "35条は額と目的、37条は定めがあるとき額・授受の時期・目的。" },
+  { q: "契約の解除に関する事項", a: "both", tag: "両方", note: "37条は定めがあるときに記載。" },
+  { q: "損害賠償額の予定・違約金に関する事項", a: "both", tag: "両方", note: "37条は定めがあるときに記載。" },
+  { q: "ローンのあっせんに係る金銭の貸借が成立しないときの措置", a: "both", tag: "両方", note: "35条は「あっせんの内容」も記載。37条は定めがあるときに不成立時の措置のみ。" },
+  { q: "契約不適合責任の履行に関して講ずる保証保険契約の締結などの措置", a: "both", tag: "両方", note: "35条は講ずるかどうかと概要、37条は定めがあるときその内容。" },
+];
+ITEMS.forEach((it, i) => it.id = i);
+
+const LABEL = { "35": "35条", "37": "37条", both: "両方" };
+const $ = id => document.getElementById(id);
+
+// 苦手記録はブラウザに保存（保存できない環境でも動くようにする）
+const STORE_KEY = "takken3537_miss";
+function loadMiss() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch { return {}; }
+}
+function saveMiss(m) {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(m)); } catch {}
+}
+let miss = loadMiss(); // { id: まちがえて未克服の回数 }
+
+let deck = [], idx = 0, correct = 0, wrongs = [], answered = false;
+
+function show(id) {
+  ["start", "quiz", "end", "list"].forEach(s => $(s).classList.toggle("hidden", s !== id));
+  window.scrollTo(0, 0);
+}
+function pool() {
+  return ITEMS.filter(it => $("includeBoth").checked || it.a !== "both");
+}
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+function refreshStart() {
+  const p = pool();
+  $("allCount").textContent = `全${p.length}問を出題`;
+  const w = p.filter(it => miss[it.id]).length;
+  $("weakCount").textContent = w ? `${w}問（まちがえた問題）` : "まちがえた問題はまだありません";
+  $("weakBtn").disabled = !w;
+  $("weakBtn").style.opacity = w ? 1 : .5;
+}
+
+function startQuiz(items) {
+  deck = shuffle([...items]);
+  idx = 0; correct = 0; wrongs = [];
+  show("quiz");
+  renderQ();
+}
+
+function renderQ() {
+  const it = deck[idx];
+  answered = false;
+  $("counter").textContent = `${idx + 1} / ${deck.length}　正解 ${correct}`;
+  $("prog").style.width = (idx / deck.length * 100) + "%";
+  $("qtag").textContent = it.tag;
+  $("qtext").textContent = it.q;
+  const opts = $("includeBoth").checked ? ["35", "37", "both"] : ["35", "37"];
+  const box = $("choices");
+  box.className = "choices" + (opts.length === 3 ? " three" : "");
+  box.innerHTML = "";
+  opts.forEach((o, k) => {
+    const b = document.createElement("button");
+    b.className = "choice c" + o.replace("both", "") + (o === "both" ? " both" : "");
+    const sub = { "35": "重要事項説明書", "37": "契約書面", both: "どちらにも" }[o];
+    b.innerHTML = `${LABEL[o]}<small>${sub}（${k + 1}）</small>`;
+    b.dataset.a = o;
+    b.onclick = () => answer(o);
+    box.appendChild(b);
+  });
+  $("result").classList.add("hidden");
+  $("nextBtn").classList.add("hidden");
+}
+
+function answer(o) {
+  if (answered) return;
+  answered = true;
+  const it = deck[idx];
+  const ok = o === it.a;
+  if (ok) {
+    correct++;
+    if (miss[it.id]) { delete miss[it.id]; } // 正解したら苦手リストから外す
+  } else {
+    wrongs.push(it);
+    miss[it.id] = (miss[it.id] || 0) + 1;
+  }
+  saveMiss(miss);
+  [...$("choices").children].forEach(b => {
+    b.disabled = true;
+    if (b.dataset.a !== it.a) b.classList.add("dim");
+  });
+  const r = $("result");
+  r.className = "result " + (ok ? "ok" : "ng");
+  r.innerHTML = `<div class="head">${ok ? "◯ 正解" : "✕ 不正解"}　答え：${LABEL[it.a]}</div><p>${it.note}</p>`;
+  $("nextBtn").textContent = idx + 1 < deck.length ? "次へ（Enter）" : "結果を見る（Enter）";
+  $("nextBtn").classList.remove("hidden");
+  $("counter").textContent = `${idx + 1} / ${deck.length}　正解 ${correct}`;
+}
+
+function next() {
+  idx++;
+  if (idx < deck.length) renderQ(); else finish();
+}
+
+function finish() {
+  $("prog").style.width = "100%";
+  const pct = Math.round(correct / deck.length * 100);
+  $("score").textContent = `${correct} / ${deck.length}`;
+  $("scoreSub").textContent = pct === 100 ? "全問正解！完璧です" : `正答率 ${pct}%`;
+  $("missCard").classList.toggle("hidden", !wrongs.length);
+  $("retryMissBtn").classList.toggle("hidden", !wrongs.length);
+  $("missList").innerHTML = wrongs.map(itemHTML).join("");
+  show("end");
+}
+
+function itemHTML(it) {
+  const cls = { "35": "a35", "37": "a37", both: "aboth" }[it.a];
+  return `<li><span class="badge ${cls}">${LABEL[it.a]}</span>${it.q}<div class="note">${it.tag}｜${it.note}</div></li>`;
+}
+
+function renderList() {
+  const noBadge = it => `<li>${it.q}<div class="note">${it.tag}｜${it.note}</div></li>`;
+  $("list35").innerHTML = ITEMS.filter(i => i.a === "35").map(noBadge).join("");
+  $("list37").innerHTML = ITEMS.filter(i => i.a === "37").map(noBadge).join("");
+  $("listBoth").innerHTML = ITEMS.filter(i => i.a === "both").map(noBadge).join("");
+  show("list");
+}
+
+// --- イベント ---
+document.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => {
+  const p = pool();
+  const m = b.dataset.mode;
+  if (m === "10") startQuiz(shuffle([...p]).slice(0, 10));
+  if (m === "all") startQuiz(p);
+  if (m === "weak") startQuiz(p.filter(it => miss[it.id]));
+});
+$("includeBoth").onchange = () => {
+  try { localStorage.setItem("takken3537_both", $("includeBoth").checked ? "1" : ""); } catch {}
+  refreshStart();
+};
+$("nextBtn").onclick = next;
+$("quitBtn").onclick = () => { refreshStart(); show("start"); };
+$("homeBtn").onclick = () => { refreshStart(); show("start"); };
+$("retryMissBtn").onclick = () => startQuiz(wrongs);
+$("listBtn").onclick = renderList;
+$("listBack").onclick = () => show("start");
+
+// キーボード操作：1/2/3で回答、Enterで次へ
+document.addEventListener("keydown", e => {
+  if ($("quiz").classList.contains("hidden")) return;
+  if (!answered && ["1", "2", "3"].includes(e.key)) {
+    const b = $("choices").children[+e.key - 1];
+    if (b) answer(b.dataset.a);
+  } else if (answered && (e.key === "Enter" || e.key === " ")) {
+    e.preventDefault(); next();
+  }
+});
+
+try { $("includeBoth").checked = localStorage.getItem("takken3537_both") === "1"; } catch {}
+refreshStart();
+
+// オフラインで遊べるようにする（ネット上に公開したときだけ動く）
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+</script>
+</body>
+</html>
